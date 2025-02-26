@@ -29,10 +29,14 @@ def calculate_loss(spheres_surface,
     
     # Create particle lists
     surface_particles = spheres_surface.spheres
-    object_particles = object  
+    object_particles = object 
     
     # Set parameters for all particles
-    for particle in surface_particles + object_particles:
+    for particle in surface_particles:
+        particle.l_max = 3  # multipolar order
+        particle.m_max = 3  # azimuthal order
+
+    for particle in object_particles:
         particle.l_max = 3  # multipolar order
         particle.m_max = 3  # azimuthal order
     
@@ -93,7 +97,7 @@ if __name__ == "__main__":
     
     spheres_surface.__spheres_add__(spheres_radius_list, coordinates_list)
 
-    object = smuthi.particles.Sphere(radius=0.1, position=[0, 0, 0], refractive_index=complex(5, 0.0))
+    object = [smuthi.particles.Sphere(radius=0.1, position=[0, 0, 0], refractive_index=complex(5, 0.0))]
 
     loss = calculate_loss(spheres_surface, object, 0.5, [np.pi/4, np.pi/3])
     
