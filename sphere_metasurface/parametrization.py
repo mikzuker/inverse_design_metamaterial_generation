@@ -19,6 +19,7 @@ class Sphere_surface(object):
         self.side_length = side_length
         self.reflective_index = reflective_index
 
+
     def mesh_generation(self):
         """
         Mesh generation for the sphere surface
@@ -40,21 +41,7 @@ class Sphere_surface(object):
                 # ]
                 square = [(x_1, y_1), (x_2, y_2)]
                 self.squares.append(square)
-    
 
-    # def mesh_plot(self):
-    #     """
-    #     Plot the mesh
-    #     """
-    #     for square in self.squares:
-    #         x_coords = [point[0] for point in square]
-    #         y_coords = [point[1] for point in square]
-            
-    #         plt.plot(x_coords, y_coords, 'o', color='black')
-        
-    #     plt.grid(True)
-    #     plt.savefig('/workspace/sphere_metasurface/plots/mesh.png')
-    #     plt.close()
     
     def __spheres_add__(self, spheres_radius_list: list, coordinates_list: list):
         """
@@ -71,27 +58,33 @@ class Sphere_surface(object):
                 )
                 self.spheres.append(sphere)
 
-    def spheres_plot(self):
+
+    def spheres_plot(self, save_path: str):
         """
         Plot the spheres in 2D projection
         """
+        fig = plt.figure(figsize=(10, 10))
+        
         for sphere in self.spheres:
             x, y = sphere.position[0], sphere.position[1]
             radius = sphere.radius
-            
             circle = plt.Circle((x, y), radius, fill=True, color='blue')
             plt.gca().add_patch(circle)
         
         for square in self.squares:
             x_coords = [point[0] for point in square]
             y_coords = [point[1] for point in square]
-            
             plt.plot(x_coords, y_coords, 'o', color='black')
+        
+        plt.plot(0, self.side_length, 'o', color='black')  # верхняя левая точка
+        plt.plot(self.side_length, 0, 'o', color='black')  # нижняя правая точка
         
         plt.axis('equal')
         plt.grid(True)
-        plt.savefig('/workspace/sphere_metasurface/plots/spheres_surface_projection.png')
+        plt.title('Spheres surface projection')
+        plt.savefig(save_path)
         plt.close()
+        return fig
 
 
 if __name__ == "__main__":
@@ -103,7 +96,6 @@ if __name__ == "__main__":
     )
     
     surface.mesh_generation()
-    # surface.mesh_plot()
     
     coordinates_list = [
         [0.3, 0.5, 0],  
@@ -121,7 +113,7 @@ if __name__ == "__main__":
     
     surface.__spheres_add__(spheres_radius_list, coordinates_list)
     
-    surface.spheres_plot()
+    surface.spheres_plot(save_path='/workspace/sphere_metasurface/plots/spheres_surface_projection.png')
     
     layers = smuthi.layers.LayerSystem()
     
