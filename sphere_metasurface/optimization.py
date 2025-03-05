@@ -5,11 +5,32 @@ import random
 import cmaes
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import os
+import sys
+import io
+import contextlib
+import ray  # Import Ray for parallel processing
+import logging
 
 import smuthi.particles as particles
 
 from parametrization import Sphere_surface
-from fitness_function import calculate_loss, calculate_spectrum
+from fitness_function import calculate_loss, calculate_spectrum, precompute_object_spectrum, precompute_full_object_spectrum
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
+)
+logger = logging.getLogger('optimization')
+
+# Register custom classes for Ray serialization if needed
+try:
+    ray.util.register_serialization_context("sphere_metasurface")
+except (AttributeError, ImportError):
+    # This is fine if we're using a Ray version that doesn't have this feature
+    pass
 
 class Optimization(object):
     def __init__(self,
@@ -21,8 +42,36 @@ class Optimization(object):
                  refractive_index: complex,
                  iterations: int,
                  seed: int,
+                 num_workers: int = None,  # Added parameter to control number of Ray workers
+                 use_parallel: bool = True,  # Added parameter to enable/disable parallelization
                  ):
-        self.surface = Sphere_surface(number_of_cells, side_length, refractive_index)
+        """
+        Initialize the optimization object.
+        
+        Parameters:
+        -----------
+        object_to_mimic: Object
+            Object to mimic, can be a sphere, cylinder, or list of such objects.
+        vacuum_wavelength: float
+            Vacuum wavelength of the incident light.
+        angeles_to_mimic: list
+            List of angles to mimic the spectrum at.
+        side_length: float
+            Side length of the surface.
+        number_of_cells: int
+            Number of cells in one dimension.
+        refractive_index: complex
+            Refractive index of the material.
+        iterations: int
+            Number of iterations to run the optimization for.
+        seed: int
+            Random seed for reproducibility.
+        num_workers: int, optional
+            Number of Ray workers to use for parallelization. If None, Ray will use all available resources.
+        use_parallel: bool, optional
+            Whether to use Ray for parallelization. If False, computations will be performed sequentially.
+        """
+        # Store all parameters
         self.object_to_mimic = object_to_mimic
         self.vacuum_wavelength = vacuum_wavelength
         self.angeles_to_mimic = angeles_to_mimic
@@ -31,6 +80,24 @@ class Optimization(object):
         self.refractive_index = refractive_index
         self.iterations = iterations
         self.seed = seed
+        self.num_workers = num_workers  # Store the number of workers parameter
+        self.use_parallel = use_parallel  # Store whether to use parallelization
+        
+        # Create the surface object
+        self.surface = Sphere_surface(
+            number_of_cells=number_of_cells,
+            side_length=side_length,
+            reflective_index=refractive_index)
+        
+        # Precompute object spectrum once to save computational resources 
+        self.precomputed_object_spectrum = precompute_object_spectrum(object_to_mimic, 
+                                                                       vacuum_wavelength, 
+                                                                       angeles_to_mimic)
+        
+        # Precompute full object spectrum once for plotting and comparisons
+        self.precomputed_full_object_spectrum = precompute_full_object_spectrum(object_to_mimic, 
+                                                                       vacuum_wavelength)
+        print("Object spectra precomputation complete.")
 
     def extrapolate_params(self, params):
             real_params = []
@@ -60,34 +127,97 @@ class Optimization(object):
         """
         Optimize the sphere surface using CMA-ES algorithm.
         """
+        # Initialize Ray only if parallelization is enabled
+        if self.use_parallel:
+            ray_init_args = {
+                "ignore_reinit_error": True,
+                # "runtime_env": {"pip": ["numpy", "matplotlib"]}
+            }
+            
+            if self.num_workers is not None:
+                ray_init_args["num_cpus"] = self.num_workers
+                logger.info(f"Configuring Ray with {self.num_workers} workers")
+            
+            try:
+                ray.init(**ray_init_args)
+                logger.info("Ray initialized successfully")
+            except Exception as e:
+                logger.warning(f"Ray initialization warning (this may be ok if already initialized): {str(e)}")
+        else:
+            logger.info("Parallelization disabled, running in sequential mode")
+        
         self.surface.mesh_generation()
+        logger.info(f"Starting optimization with {self.number_of_cells}x{self.number_of_cells} cells grid")
 
         n_spheres = self.number_of_cells**2
         random.seed(self.seed)
         initial_params = [random.uniform(0, 1) for _ in range(3*n_spheres)]
         
         cell_size = self.surface.side_length / self.surface.number_of_cells
-
-        def objective_function(params):
-          
-            real_params = self.extrapolate_params(params)
-            real_x = real_params[::3]
-            real_y = real_params[1::3]
-            real_coordinates_list = [[real_x[i], real_y[i], 0] for i in range(len(real_x))]
-            
-         
-            surface = Sphere_surface(self.number_of_cells, self.side_length, self.refractive_index)
-            surface.__spheres_add__(coordinates_list=real_coordinates_list, spheres_radius_list=real_params[2::3])
-            
-            loss_value = calculate_loss(surface, 
-                                        self.object_to_mimic, 
-                                        self.vacuum_wavelength, 
-                                        self.angeles_to_mimic
-                                        )
-            
-            return loss_value
-
+        
+        # Define a local, non-parallel objective function for sequential execution
+        def objective_function_local(params, extrapolate_params_result):
+            with contextlib.redirect_stdout(io.StringIO()) as stdout, contextlib.redirect_stderr(io.StringIO()) as stderr:
+                try:
+                    # Use the already extrapolated parameters to avoid serialization issues
+                    real_params = extrapolate_params_result
+                    real_x = real_params[::3]
+                    real_y = real_params[1::3]
+                    real_coordinates_list = [[real_x[i], real_y[i], 0] for i in range(len(real_x))]
+                    
+                    surface = Sphere_surface(self.number_of_cells, self.side_length, self.refractive_index)
+                    surface.__spheres_add__(coordinates_list=real_coordinates_list, spheres_radius_list=real_params[2::3])
+                    
+                    loss_value = calculate_loss(surface, 
+                                               self.object_to_mimic, 
+                                               self.vacuum_wavelength, 
+                                               self.angeles_to_mimic,
+                                               precomputed_dscs_object=self.precomputed_object_spectrum
+                                               )
+                    
+                    return loss_value
+                except Exception as e:
+                    error_message = f"Error in objective function: {str(e)}\nSTDOUT: {stdout.getvalue()}\nSTDERR: {stderr.getvalue()}"
+                    print(error_message)
+                    # If an exception occurs, return a high loss value
+                    # This ensures the optimization continues even if a calculation fails
+                    return 1e10  # A very high loss value
+        
+        # Define the objective function as a remote Ray function with proper error handling
+        @ray.remote
+        def objective_function_remote(params, number_of_cells, side_length, refractive_index, 
+                                     extrapolate_params_result, object_to_mimic, 
+                                     vacuum_wavelength, angeles_to_mimic, precomputed_object_spectrum):
+            # Use a context manager approach to redirect stdout and stderr
+            with contextlib.redirect_stdout(io.StringIO()) as stdout, contextlib.redirect_stderr(io.StringIO()) as stderr:
+                try:
+                    # Use the already extrapolated parameters to avoid serialization issues
+                    real_params = extrapolate_params_result
+                    real_x = real_params[::3]
+                    real_y = real_params[1::3]
+                    real_coordinates_list = [[real_x[i], real_y[i], 0] for i in range(len(real_x))]
+                    
+                    surface = Sphere_surface(number_of_cells, side_length, refractive_index)
+                    surface.__spheres_add__(coordinates_list=real_coordinates_list, spheres_radius_list=real_params[2::3])
+                    
+                    loss_value = calculate_loss(surface, 
+                                               object_to_mimic, 
+                                               vacuum_wavelength, 
+                                               angeles_to_mimic,
+                                               precomputed_dscs_object=precomputed_object_spectrum
+                                               )
+                    
+                    return loss_value
+                except Exception as e:
+                    error_message = f"Error in objective function: {str(e)}\nSTDOUT: {stdout.getvalue()}\nSTDERR: {stderr.getvalue()}"
+                    print(error_message)
+                    # If an exception occurs, return a high loss value
+                    # This ensures the optimization continues even if a calculation fails
+                    return 1e10  # A very high loss value
+        
         population_size = 50
+        logger.info(f"Using population size: {population_size}")
+        
         # Запускаем CMA-ES
         opts = cmaes.CMA(mean=np.array(initial_params), 
                          sigma=0.1 * cell_size,
@@ -102,28 +232,83 @@ class Optimization(object):
         progress = []
 
         for generation in pbar:
-            solutions = []
-            values = []
-            for _ in range(population_size):
-                params = opts.ask()
-                value = objective_function(params)
+            try:
+                solutions = []
+                values = []
+                
+                # Generate all parameter sets for this generation
+                params_list = [opts.ask() for _ in range(population_size)]
+                
+                try:
+                    # Pre-compute extrapolated params to avoid serialization issues
+                    extrapolated_params_list = [self.extrapolate_params(params) for params in params_list]
+                    
+                    if self.use_parallel:
+                        # Evaluate all parameter sets in parallel using Ray
+                        value_refs = [objective_function_remote.remote(
+                            params_list[i],
+                            self.number_of_cells,
+                            self.side_length,
+                            self.refractive_index,
+                            extrapolated_params_list[i],
+                            self.object_to_mimic,
+                            self.vacuum_wavelength,
+                            self.angeles_to_mimic,
+                            self.precomputed_object_spectrum
+                        ) for i in range(len(params_list))]
+                        
+                        # Wait for all evaluations to complete with a timeout
+                        values = ray.get(value_refs, timeout=300)  # 5-minute timeout as a safety measure
+                    else:
+                        # Evaluate all parameter sets sequentially
+                        values = []
+                        for i, params in enumerate(params_list):
+                            try:
+                                loss_value = objective_function_local(params, extrapolated_params_list[i])
+                                values.append(loss_value)
+                            except Exception as inner_e:
+                                logger.error(f"Error in sequential computation for individual {i}: {str(inner_e)}")
+                                values.append(1e10)  # High loss for failed evaluations
+                except Exception as e:
+                    logger.error(f"Error in parallel execution: {str(e)}")
+                    # Fallback: compute sequentially if parallel execution fails
+                    logger.warning("Falling back to sequential computation for this generation")
+                    values = []
+                    for i, params in enumerate(params_list):
+                        try:
+                            loss_value = objective_function_local(params, extrapolated_params_list[i])
+                            values.append(loss_value)
+                        except Exception as inner_e:
+                            logger.error(f"Error in sequential fallback for individual {i}: {str(inner_e)}")
+                            values.append(1e10)  # High loss for failed evaluations
+                
+                # Process results
+                for i, (params, value) in enumerate(zip(params_list, values)):
+                    if value < max_value:
+                        max_value = value
+                        max_params = params
+                        cnt += 1
+                    solutions.append((params, value))
+               
+                opts.tell(solutions)
+                progress.append(np.around(np.mean(values), 15))
 
-                values.append(value)
-                if value < max_value:
-                    max_value = value
-                    max_params = params
-                    cnt += 1
+                pbar.set_description(
+                    "Processed %s generation\t max %s mean %s"
+                    % (generation, np.around(max_value, 15), np.around(np.mean(values), 15))
+                )
+            except Exception as generation_error:
+                logger.error(f"Error processing generation {generation}: {str(generation_error)}")
+                # Continue to next generation if there's an error
+                continue
 
-                solutions.append((params, value))
-           
-            opts.tell(solutions)
-            progress.append(np.around(np.mean(values), 15))
-
-        pbar.set_description(
-            "Processed %s generation\t max %s mean %s"
-            % (generation, np.around(max_value, 15), np.around(np.mean(values), 15))
-        )
-
+        # Shutdown Ray after optimization is complete if it was used
+        if self.use_parallel:
+            try:
+                ray.shutdown()
+                logger.info("Ray shutdown completed")
+            except Exception as e:
+                logger.warning(f"Ray shutdown warning: {str(e)}")
 
         results = {
             "params": max_params,
@@ -133,63 +318,6 @@ class Optimization(object):
 
         experiment_dir = Path("sphere_metasurface/results") / f"experiment_{self.side_length}_{self.number_of_cells}_{self.number_of_cells}_{self.refractive_index}_{self.seed}_{self.iterations}"
         experiment_dir.mkdir(parents=True, exist_ok=True)
-        
-        # def save_results(results):
-        #     parameters_0_to_1 = experiment_dir / "parameters_0_to_1.json"
-        #     real_parameters = experiment_dir / "real_parameters.json"
-        #     hyperparameters = experiment_dir / "hyperparameters.json"
-
-        #     with open(parameters_0_to_1, "w") as f:
-        #         json.dump(list(results["params"]), f)
-
-        #     with open(real_parameters, "w") as f:
-        #         real_params = self.extrapolate_params(results["params"])
-            #     real_x = real_params[::3]
-            #     real_y = real_params[1::3]
-            #     real_coordinates_list = [[real_x[i], real_y[i], 0] for i in range(len(real_x))]
-            #     real_radiuses = real_params[2::3]
-
-            #     real_coordinates_and_radiuses = {
-            #         "coordinates": list(real_coordinates_list),
-            #         "radiuses": list(real_radiuses)
-            #     }
-
-            #     json.dump(real_coordinates_and_radiuses, f)
-
-            # with open(hyperparameters, "w") as f:
-            #     # Преобразуем объект Sphere в словарь с его параметрами
-            #     if isinstance(self.object_to_mimic, list):
-            #         object_params = [{
-            #             "radius": sphere.radius,
-            #             "position": sphere.position,
-            #             "refractive_index": {
-            #                 "real": sphere.refractive_index.real,
-            #                 "imag": sphere.refractive_index.imag
-            #             }
-            #         } for sphere in self.object_to_mimic]
-            #     else:
-            #         object_params = {
-            #             "radius": self.object_to_mimic.radius,
-            #             "position": self.object_to_mimic.position,
-            #             "refractive_index": {
-            #                 "real": self.object_to_mimic.refractive_index.real,
-            #                 "imag": self.object_to_mimic.refractive_index.imag
-            #             }
-            #         }
-
-            #     hyperparameters = {
-            #         "object_to_mimic": object_params,
-            #         "vacuum_wavelength": self.vacuum_wavelength,
-            #         "angeles_to_mimic": list(self.angeles_to_mimic),  # преобразуем numpy array в list
-            #         "side_length": self.side_length,
-            #         "number_of_cells": self.number_of_cells,
-            #         "refractive_index": self.refractive_index,
-            #         "iterations": self.iterations,
-            #         "seed": self.seed
-            #     }
-
-            #     json.dump(hyperparameters, f)
-            # return results 
         
         def plot_optimized_structure(results):
             real_params = self.extrapolate_params(results["params"])
@@ -226,7 +354,17 @@ class Optimization(object):
             surface.__spheres_add__(coordinates_list=real_coordinates_list, spheres_radius_list=real_radiuses)
 
             fig = plt.figure(figsize=(10, 10))
-            whole_dscs_surface, whole_dscs_object = calculate_spectrum(surface, self.object_to_mimic, self.vacuum_wavelength)
+            # Use the precomputed full object spectrum to save computational resources
+            whole_dscs_surface, _ = calculate_spectrum(
+                surface, 
+                self.object_to_mimic, 
+                self.vacuum_wavelength,
+                precomputed_dscs_object=self.precomputed_full_object_spectrum
+            )
+            
+            # Use the precomputed full object spectrum directly
+            whole_dscs_object = self.precomputed_full_object_spectrum
+            
             surface_array = [np.arange(0, 180, 0.5), whole_dscs_surface]
             object_array = [np.arange(0, 180, 0.5), whole_dscs_object]
             plt.plot(*surface_array, label='surface', linewidth=2)
@@ -267,25 +405,23 @@ if __name__ == "__main__":
                                            cylinder_height=2,
                                            euler_angles=[0, 0, 0])]
     
-    # object_to_mimic = Sphere_surface(
-    #     number_of_cells=3,
-    #     side_length=3.0,
-    #     reflective_index=4
-    # )
-    
-    # object_to_mimic.mesh_generation()
-    
-    # coordinates_list = [
-    #     [0.75, 0.75, 0],  
-    #     [2.25, 0.75, 0],  
-    #     [0.75, 2.25, 0],  
-    #     [2.25, 2.25, 0],  
-    # ]
-    
-    # spheres_radius_list = [0.2] * 4
-    
-    # object_to_mimic.__spheres_add__(spheres_radius_list, coordinates_list)
+    # Example 1: Use all available CPU cores for parallelization
+    optimizer = Optimization(object_to_mimic=object_to_mimic, 
+                        vacuum_wavelength=0.5, 
+                        angeles_to_mimic=np.array([np.deg2rad(24), np.deg2rad(70), np.deg2rad(115), np.deg2rad(170)]), 
+                        side_length=4.0, 
+                        number_of_cells=3, 
+                        refractive_index=4+0.1j, 
+                        iterations=100, 
+                        seed=43,
+                        num_workers=None  # Use all available cores
+                        )
 
+    optimized_surface = optimizer.optimize()
+    
+    # Example 2: Specify a fixed number of workers (e.g., 4 cores)
+    # To use this example, uncomment the code below
+    """
     optimizer = Optimization(object_to_mimic=object_to_mimic, 
                         vacuum_wavelength=0.5, 
                         angeles_to_mimic=np.array([np.deg2rad(24), np.deg2rad(70), np.deg2rad(115), np.deg2rad(170)]), 
@@ -293,8 +429,27 @@ if __name__ == "__main__":
                         number_of_cells=3, 
                         refractive_index=4+0.1j, 
                         iterations=1500, 
-                        seed=43
+                        seed=43,
+                        num_workers=4  # Use exactly 4 cores
                         )
 
     optimized_surface = optimizer.optimize()
+    """
+    
+    # Example 3: Run without parallelization (sequential mode)
+    # To use this example, uncomment the code below
+    """
+    optimizer = Optimization(object_to_mimic=object_to_mimic, 
+                        vacuum_wavelength=0.5, 
+                        angeles_to_mimic=np.array([np.deg2rad(24), np.deg2rad(70), np.deg2rad(115), np.deg2rad(170)]), 
+                        side_length=4.0, 
+                        number_of_cells=3, 
+                        refractive_index=4+0.1j, 
+                        iterations=1500, 
+                        seed=43,
+                        use_parallel=False  # Disable parallelization completely
+                        )
+
+    optimized_surface = optimizer.optimize()
+    """
     

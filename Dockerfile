@@ -40,11 +40,10 @@ RUN python3 -m pip install --no-build-isolation smuthi
 # Install development tools
 RUN python3 -m pip install jupyter ipython debugpy pylint autopep8
 
+RUN python3 -m pip install cmaes ray
+
 # Set working directory
 WORKDIR /workspace
-
-# Copy example.py into the container
-COPY example.py .
 
 # Expose ports for Jupyter and debugpy
 EXPOSE 8888 5678
