@@ -29,7 +29,7 @@ def calculate_loss(spheres_surface,
     
     # Create particle lists
     surface_particles = spheres_surface.spheres
-    object_particles = object.spheres
+    object_particles = object
     
     # Set parameters for all particles
     for particle in surface_particles:
@@ -89,16 +89,16 @@ def calculate_spectrum(spheres_surface,
     
     # Create particle lists
     surface_particles = spheres_surface.spheres
-    object_particles = object.spheres
+    object_particles = object
     
     # Set parameters for all particles
     for particle in surface_particles:
-        particle.l_max = 3  # multipolar order
-        particle.m_max = 3  # azimuthal order
+        particle.l_max = 5  # multipolar order
+        particle.m_max = 5  # azimuthal order
 
     for particle in object_particles:
-        particle.l_max = 3  # multipolar order
-        particle.m_max = 3  # azimuthal order
+        particle.l_max = 5  # multipolar order
+        particle.m_max = 5  # azimuthal order
     
     # Create and run simulation for surface
     simulation_surface = smuthi.simulation.Simulation(layer_system=layers,

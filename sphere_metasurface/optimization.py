@@ -87,7 +87,7 @@ class Optimization(object):
             
             return loss_value
 
-        population_size = 16
+        population_size = 50
         # Запускаем CMA-ES
         opts = cmaes.CMA(mean=np.array(initial_params), 
                          sigma=0.1 * cell_size,
@@ -227,16 +227,16 @@ class Optimization(object):
 
             fig = plt.figure(figsize=(10, 10))
             whole_dscs_surface, whole_dscs_object = calculate_spectrum(surface, self.object_to_mimic, self.vacuum_wavelength)
-            surface_array = [np.arange(0, 360, 1), whole_dscs_surface]
-            object_array = [np.arange(0, 360, 1), whole_dscs_object]
+            surface_array = [np.arange(0, 180, 0.5), whole_dscs_surface]
+            object_array = [np.arange(0, 180, 0.5), whole_dscs_object]
             plt.plot(*surface_array, label='surface', linewidth=2)
             plt.plot(*object_array, label='object', linewidth=2)
             
             
             angles_indices = np.round(np.degrees(self.angeles_to_mimic)).astype(int)
             
-            target_values_object = whole_dscs_object[angles_indices]
-            target_values_surface = whole_dscs_surface[angles_indices]
+            target_values_object = whole_dscs_object[[angles_indices[i]*2 for i in range(len(angles_indices))]]
+            target_values_surface = whole_dscs_surface[[angles_indices[i]*2 for i in range(len(angles_indices))]]
             
             plt.scatter(angles_indices, target_values_object, color='red', s=100, label='target angles object')
             plt.scatter(angles_indices, target_values_surface, color='blue', s=100, label='target angles surface')
@@ -246,7 +246,7 @@ class Optimization(object):
             plt.ylabel('DSCS')
             plt.title('Spectrum')
             plt.grid()
-            plt.yscale('log')
+            # plt.yscale('log')
             plt.savefig(experiment_dir / 'spectrum.pdf')
             plt.close()
 
@@ -261,39 +261,39 @@ class Optimization(object):
 
 
 if __name__ == "__main__":
-    # object_to_mimic = [particles.FiniteCylinder(position=[0, 0, 250],  # Подняли вверх
-    #                                        refractive_index=2, 
-    #                                        cylinder_radius=15,
-    #                                        cylinder_height=50,
-    #                                        euler_angles=[0, 0, 0])]
+    object_to_mimic = [particles.FiniteCylinder(position=[0, 0, 0], 
+                                           refractive_index=4+0.1j, 
+                                           cylinder_radius=5,
+                                           cylinder_height=2,
+                                           euler_angles=[0, 0, 0])]
     
-    object_to_mimic = Sphere_surface(
-        number_of_cells=2,
-        side_length=3.0,
-        reflective_index=4
-    )
+    # object_to_mimic = Sphere_surface(
+    #     number_of_cells=3,
+    #     side_length=3.0,
+    #     reflective_index=4
+    # )
     
-    object_to_mimic.mesh_generation()
+    # object_to_mimic.mesh_generation()
     
-    coordinates_list = [
-        [0.75, 0.75, 0],  
-        [1.5, 1.5, 0],  
-        [0.75, 1.5, 0],  
-        [1.5, 0.75, 0],  
-    ]
+    # coordinates_list = [
+    #     [0.75, 0.75, 0],  
+    #     [2.25, 0.75, 0],  
+    #     [0.75, 2.25, 0],  
+    #     [2.25, 2.25, 0],  
+    # ]
     
-    spheres_radius_list = [0.2] * 4
+    # spheres_radius_list = [0.2] * 4
     
-    object_to_mimic.__spheres_add__(spheres_radius_list, coordinates_list)
+    # object_to_mimic.__spheres_add__(spheres_radius_list, coordinates_list)
 
     optimizer = Optimization(object_to_mimic=object_to_mimic, 
                         vacuum_wavelength=0.5, 
-                        angeles_to_mimic=np.array([np.deg2rad(30), np.deg2rad(150), np.deg2rad(210), np.deg2rad(280)]), 
-                        side_length=3.0, 
-                        number_of_cells=2, 
-                        refractive_index=4, 
-                        iterations=500, 
-                        seed=44
+                        angeles_to_mimic=np.array([np.deg2rad(24), np.deg2rad(70), np.deg2rad(115), np.deg2rad(170)]), 
+                        side_length=4.0, 
+                        number_of_cells=3, 
+                        refractive_index=4+0.1j, 
+                        iterations=1500, 
+                        seed=43
                         )
 
     optimized_surface = optimizer.optimize()
