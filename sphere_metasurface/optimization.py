@@ -87,7 +87,7 @@ class Optimization(object):
             
             return loss_value
 
-        population_size = 50
+        population_size = 30
         # Запускаем CMA-ES
         opts = cmaes.CMA(mean=np.array(initial_params), 
                          sigma=0.1 * cell_size,
@@ -262,7 +262,7 @@ class Optimization(object):
 
 if __name__ == "__main__":
     object_to_mimic = [particles.FiniteCylinder(position=[0, 0, 0], 
-                                           refractive_index=4+0.1j, 
+                                           refractive_index=2, 
                                            cylinder_radius=5,
                                            cylinder_height=2,
                                            euler_angles=[0, 0, 0])]
@@ -287,13 +287,13 @@ if __name__ == "__main__":
     # object_to_mimic.__spheres_add__(spheres_radius_list, coordinates_list)
 
     optimizer = Optimization(object_to_mimic=object_to_mimic, 
-                        vacuum_wavelength=0.5, 
+                        vacuum_wavelength=2, 
                         angeles_to_mimic=np.array([np.deg2rad(24), np.deg2rad(70), np.deg2rad(115), np.deg2rad(170)]), 
                         side_length=4.0, 
                         number_of_cells=3, 
-                        refractive_index=4+0.1j, 
-                        iterations=1500, 
-                        seed=43
+                        refractive_index=20, 
+                        iterations=500, 
+                        seed=3
                         )
 
     optimized_surface = optimizer.optimize()

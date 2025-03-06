@@ -11,13 +11,13 @@ import numpy as np
 
 layers = smuthi.layers.LayerSystem()
 
-initial_field = smuthi.initial_field.PlaneWave(vacuum_wavelength=0.5,
+initial_field = smuthi.initial_field.PlaneWave(vacuum_wavelength=2,
                                                    polar_angle=np.pi,
                                                    azimuthal_angle=0,
                                                    polarization=0)
     
 object_particles = [smuthi.particles.FiniteCylinder(position=[0, 0, 0], 
-                                           refractive_index=4+0.1j, 
+                                           refractive_index=4, 
                                            cylinder_radius=5,
                                            cylinder_height=2,
                                            euler_angles=[0, 0, 0],
@@ -38,7 +38,7 @@ simulation_object = smuthi.simulation.Simulation(layer_system=layers,
                                                 initial_field=initial_field)
 simulation_object.run()
     
-whole_far_field_object = ff.scattered_far_field(vacuum_wavelength=0.5,
+whole_far_field_object = ff.scattered_far_field(vacuum_wavelength=2,
                                 particle_list=object_particles,
                                 layer_system=layers 
                                 )
