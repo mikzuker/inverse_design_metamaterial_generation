@@ -17,7 +17,7 @@ initial_field = smuthi.initial_field.PlaneWave(vacuum_wavelength=2,
                                                    polarization=0)
     
 object_particles = [smuthi.particles.FiniteCylinder(position=[0, 0, 0], 
-                                           refractive_index=4, 
+                                           refractive_index=2, 
                                            cylinder_radius=5,
                                            cylinder_height=2,
                                            euler_angles=[0, 0, 0],
@@ -55,5 +55,5 @@ plt.ylabel('DSCS')
 plt.title('Spectrum')
 plt.grid()
 # plt.yscale('log')
-plt.savefig('/workspace/sphere_metasurface/plots/object_try_11.pdf')
+plt.savefig('/workspace/sphere_metasurface/plots/object_try_13.pdf')
 plt.close()
