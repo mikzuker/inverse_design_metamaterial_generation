@@ -215,7 +215,7 @@ class Optimization(object):
                     # This ensures the optimization continues even if a calculation fails
                     return 1e10  # A very high loss value
         
-        population_size = 50
+        population_size = 70
         logger.info(f"Using population size: {population_size}")
         
 
@@ -339,6 +339,8 @@ class Optimization(object):
 
         experiment_dir = Path("sphere_metasurface/results") / f"experiment_{self.side_length}_{self.number_of_cells}_{self.number_of_cells}_{self.refractive_index}_{self.seed}_{self.iterations}"
         experiment_dir.mkdir(parents=True, exist_ok=True)
+
+        # json.dump(results, open(experiment_dir / 'optmization_results.json', 'w'))
         
         def plot_optimized_structure(results):
             real_params = self.extrapolate_params(results["params"])
@@ -352,6 +354,9 @@ class Optimization(object):
             surface.mesh_generation()
 
             surface.spheres_plot(save_path=experiment_dir / 'spheres_surface_projection.pdf')
+
+            json.dump(real_coordinates_list, open(experiment_dir / 'coordinates.json', 'w'))
+            json.dump(real_radiuses, open(experiment_dir / 'radiuses.json', 'w'))
 
         def plot_progress(results):
             fig = plt.figure(figsize=(10, 10))
@@ -399,6 +404,12 @@ class Optimization(object):
             
             plt.scatter(angles_indices, target_values_object, color='red', s=100, label='target angles object')
             plt.scatter(angles_indices, target_values_surface, color='blue', s=100, label='target angles surface')
+
+            target_values_object_list = list(target_values_object)
+            target_values_surface_list = list(target_values_surface)
+
+            json.dump(target_values_object_list, open(experiment_dir / 'object_target_values.json', 'w'))
+            json.dump(target_values_surface_list, open(experiment_dir / 'surface_target_values.json', 'w'))
             
             plt.legend()
             plt.xlabel('Angle')
@@ -410,9 +421,40 @@ class Optimization(object):
             plt.close()
 
 
+        def save_hyperparameters(self, experiment_dir):
+
+            hyperparameters_file = experiment_dir / "hyperparameters.json"
+        
+            # Преобразуем объекты Sphere в словари с параметрами
+            object_params = {
+                "radius": float(self.object_to_mimic.cylinder_radius),
+                "position": [float(p) for p in self.object_to_mimic.position],
+                "height": float(self.object_to_mimic.cylinder_height),
+                "euler_angles": [float(angle) for angle in self.object_to_mimic.euler_angles],
+                "refractive_index": {
+                    "real": float(self.object_to_mimic.refractive_index.real),
+                    "imag": float(self.object_to_mimic.refractive_index.imag)
+                }
+            }
+
+            hyperparameters = {
+                "object_type": self.object_to_mimic.__class__.__name__,
+                "object_to_mimic": object_params,
+                "vacuum_wavelength": float(self.vacuum_wavelength),
+                "angeles_to_mimic": [float(angle) for angle in self.angeles_to_mimic],
+                "side_length": float(self.side_length),
+                "number_of_cells": int(self.number_of_cells),
+                "refractive_index": float(self.refractive_index),
+                "iterations": int(self.iterations),
+                "seed": int(self.seed)
+            }
+
+            with open(hyperparameters_file, "w") as f:
+                json.dump(hyperparameters, f, indent=4)
+            
+        save_hyperparameters(self, experiment_dir)
         
         return plot_optimized_structure(results), plot_progress(results), plot_spectrum(results)
-    
 
 
 
@@ -420,20 +462,20 @@ class Optimization(object):
 
 
 if __name__ == "__main__":
-    object_to_mimic = [particles.FiniteCylinder(position=[0, 0, 0], 
+    object_to_mimic = particles.FiniteCylinder(position=[0, 0, 0], 
                                            refractive_index=2, 
                                            cylinder_radius=5,
                                            cylinder_height=2,
-                                           euler_angles=[0, 0, 0])]
+                                           euler_angles=[0, 0, 0])
     
     # Example 1: Use all available CPU cores for parallelization
     optimizer = Optimization(object_to_mimic=object_to_mimic, 
                         vacuum_wavelength=2, 
-                        angeles_to_mimic=np.array([np.deg2rad(24), np.deg2rad(45), np.deg2rad(70), np.deg2rad(94), np.deg2rad(115), np.deg2rad(152), np.deg2rad(170)]), 
-                        side_length=4.0, 
+                        angeles_to_mimic=np.array([np.deg2rad(25), np.deg2rad(45), np.deg2rad(65), np.deg2rad(115), np.deg2rad(140), np.deg2rad(150), np.deg2rad(175)]), 
+                        side_length=7.0, 
                         number_of_cells=3, 
-                        refractive_index=20, 
-                        iterations=2500, 
+                        refractive_index=10, 
+                        iterations=1, 
                         seed=43,
                         num_workers=None  # Use all available cores
                         )

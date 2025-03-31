@@ -100,7 +100,7 @@ def precompute_object_spectrum(object,
                                                    polarization=polarization)
     
     # Create particle list
-    object_particles = object
+    object_particles = [object]
     
     # Set parameters for all particles
     for particle in object_particles:
@@ -142,7 +142,7 @@ def precompute_full_object_spectrum(object,
                                                    polarization=polarization)
     
     # Create particle list
-    object_particles = object
+    object_particles = [object]
     
     # Set parameters for all particles
     for particle in object_particles:
@@ -213,7 +213,7 @@ def calculate_spectrum(spheres_surface,
         whole_dscs_object = precomputed_dscs_object
     else:
         # Calculate object spectrum if not precomputed
-        object_particles = object
+        object_particles = [object]
         
         for particle in object_particles:
             particle.l_max = 5  # multipolar order
