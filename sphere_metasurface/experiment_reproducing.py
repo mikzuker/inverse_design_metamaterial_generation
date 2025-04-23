@@ -113,7 +113,7 @@ def reproduce_results(experiment_path, reproduce_dir):
 
 if __name__ == "__main__":
     experiment_path = "sphere_metasurface/results/experiment_7.0_3_3_10_43_1"
-    reproduce_dir = Path("sphere_metasurface/reproduced_experiments") / f"experiment_{1}"
+    reproduce_dir = Path("sphere_metasurface/reproduced_experiments") / f"experiment_{2}"
     reproduce_dir.mkdir(parents=True, exist_ok=True)
     
     reproduce_results(experiment_path, reproduce_dir)

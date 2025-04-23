@@ -105,19 +105,17 @@ class Optimization(object):
             
             for i in range(len(self.surface.squares)):
                 square = self.surface.squares[i]
-                cell_size = square[1][0] - square[0][0]  # размер ячейки
+                cell_size = square[1][0] - square[0][0] 
                 
-                # Вычисляем реальный радиус (0 -> 0, 1 -> cell_size/2)
                 radius = params[i*3 + 2] * (cell_size/2)
                 
-                # Вычисляем реальные координаты с учетом радиуса
-                x_min = square[0][0] + radius  # левая граница + радиус
-                x_max = square[1][0] - radius  # правая граница - радиус
-                x = x_min + params[i*3] * (x_max - x_min)  # интерполяция по x
+                x_min = square[0][0] + radius 
+                x_max = square[1][0] - radius 
+                x = x_min + params[i*3] * (x_max - x_min)  
                 
-                y_min = square[0][1] + radius  # нижняя граница + радиус
-                y_max = square[1][1] - radius  # верхняя граница - радиус
-                y = y_min + params[i*3 + 1] * (y_max - y_min)  # интерполяция по y
+                y_min = square[0][1] + radius 
+                y_max = square[1][1] - radius 
+                y = y_min + params[i*3 + 1] * (y_max - y_min)  
                 
                 real_params.extend([x, y, radius])
             
@@ -239,7 +237,6 @@ class Optimization(object):
             return loss_value
 
         population_size = 60
-        # Запускаем CMA-ES
         opts = cmaes.CMA(mean=np.array(initial_params), 
                          sigma=0.1 * cell_size,
                          bounds=np.tile([0, 1], (len(initial_params), 1)),

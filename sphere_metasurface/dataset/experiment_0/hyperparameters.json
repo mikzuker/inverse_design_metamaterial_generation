@@ -1,0 +1,11 @@
+{
+    "object_type": "Sphere_surface",
+    "vacuum_wavelength": 1.0,
+    "side_length": 9.0,
+    "number_of_cells": 3,
+    "refractive_index": 1.5,
+    "polar_angle": 3.141592653589793,
+    "azimuthal_angle": 0.0,
+    "polarization": 0,
+    "seed": 0
+}
