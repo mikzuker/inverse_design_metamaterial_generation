@@ -6,7 +6,7 @@ import smuthi.postprocessing.far_field as ff
 
 import numpy as np
 
-from parametrization import Sphere_surface
+from sphere_metasurface.parametrization import Sphere_surface
 import smuthi.utility.logging as log
 
 
