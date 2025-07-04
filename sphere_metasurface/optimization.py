@@ -467,12 +467,12 @@ if __name__ == "__main__":
     
     # Example 1: Use all available CPU cores for parallelization
     optimizer = Optimization(object_to_mimic=object_to_mimic, 
-                        vacuum_wavelength=2, 
+                        vacuum_wavelength=0.04, 
                         angeles_to_mimic=np.array([np.deg2rad(25), np.deg2rad(45), np.deg2rad(65), np.deg2rad(115), np.deg2rad(140), np.deg2rad(150), np.deg2rad(175)]), 
-                        side_length=7.0, 
+                        side_length=24.0, 
                         number_of_cells=3, 
-                        refractive_index=10, 
                         iterations=1, 
+                        refractive_index=10, 
                         seed=43,
                         num_workers=None  # Use all available cores
                         )

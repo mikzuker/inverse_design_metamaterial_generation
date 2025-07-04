@@ -33,12 +33,6 @@ class Sphere_surface(object):
                 y_1 = (j / self.number_of_cells) * self.side_length
                 y_2 = ((j + 1) / self.number_of_cells) * self.side_length
 
-                # square = [
-                #     (x_1, y_1),  
-                #     (x_2, y_1),  
-                #     (x_2, y_2),  
-                #     (x_1, y_2),  
-                # ]
                 square = [(x_1, y_1), (x_2, y_2)]
                 self.squares.append(square)
 
@@ -76,8 +70,8 @@ class Sphere_surface(object):
             y_coords = [point[1] for point in square]
             plt.plot(x_coords, y_coords, 'o', color='black')
         
-        plt.plot(0, self.side_length, 'o', color='black')  # верхняя левая точка
-        plt.plot(self.side_length, 0, 'o', color='black')  # нижняя правая точка
+        plt.plot(0, self.side_length, 'o', color='black')  # top left point
+        plt.plot(self.side_length, 0, 'o', color='black')  # bottom right point
         
         plt.axis('equal')
         plt.grid(True)
