@@ -422,7 +422,7 @@ class Optimization(object):
 
             hyperparameters_file = experiment_dir / "hyperparameters.json"
         
-            # Преобразуем объекты Sphere в словари с параметрами
+            # Convert Sphere objects to dictionaries with parameters
             object_params = {
                 "radius": float(self.object_to_mimic.cylinder_radius),
                 "position": [float(p) for p in self.object_to_mimic.position],

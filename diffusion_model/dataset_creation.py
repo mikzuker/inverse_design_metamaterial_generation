@@ -66,7 +66,7 @@ def extrapolate_params(params, surface):
     
     for i in range(len(surface.squares)):
         square = surface.squares[i]
-        cell_size = square[1][0] - square[0][0]  # размер ячейки
+        cell_size = square[1][0] - square[0][0]  # cell size
         
            
         radius = params[i*3 + 2] * (cell_size/2)
@@ -102,10 +102,10 @@ def generate_surface(seed: int,
 
     # spheres_radius_list = np.random.uniform(1e-2, side_length/2 - 1e-3, number_of_cells**2)
     coordinates_list_01 = np.array([np.random.uniform(0, 1) for _ in range(3*number_of_cells**2)])
-    # x = coordinates_list_01[::3]
-    # y = coordinates_list_01[1::3]
-    # coordinates_01 = [[x[i], y[i]] for i in range(len(x))]
-    # radiuses_01 = coordinates_list_01[2::3]
+    x = coordinates_list_01[::3]
+    y = coordinates_list_01[1::3]
+    coordinates_01 = [[x[i], y[i]] for i in range(len(x))]
+    radiuses_01 = coordinates_list_01[2::3]
     
     real_params = extrapolate_params(coordinates_list_01, spheres_surface)
     real_x = real_params[::3]
@@ -123,7 +123,9 @@ def generate_surface(seed: int,
         
     spheres_surface.spheres_plot(save_path=experiment_dir / 'spheres_surface_projection.pdf')
 
-    json.dump(coordinates_list_01.tolist(), open(experiment_dir / 'parameters.json', 'w'))
+    # json.dump(coordinates_list_01.tolist(), open(experiment_dir / 'parameters.json', 'w'))
+    json.dump(coordinates_01, open(experiment_dir / 'coordinates.json', 'w'))
+    json.dump(radiuses_01.tolist(), open(experiment_dir / 'radiuses.json', 'w'))
     json.dump(dscs_surface.tolist(), open(experiment_dir / 'dscs_surface.json', 'w'))
     json.dump(angles.tolist(), open(experiment_dir / 'angles.json', 'w'))
 
@@ -159,7 +161,7 @@ def generate_surface(seed: int,
 
 
 if __name__ == "__main__":
-    for i in range(0, 1000):
+    for i in range(15000, 15001):
         generate_surface(seed=i, 
                          number_of_cells=2, 
                          side_length=10, 

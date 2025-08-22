@@ -180,6 +180,7 @@ class Block(Module):
             x = x * (scale + 1) + shift
 
         if exists(film_gamma) and exists(film_beta):
+            # print(f"FiLM gamma shape: {film_gamma.shape}, x shape: {x.shape}")
             x = x * (film_gamma + 1) + film_beta
 
         x = self.act(x)
@@ -323,20 +324,20 @@ class Unet1D(Module):
             film_dims.append(mid_dim)
             film_dims.append(mid_dim)
 
-            # up: reversed(in_out), для каждого up-блока: 
-            # оба блока получают dim_out, так как block1 изменяет размерность с dim_in + dim_out на dim_out
+            # up: reversed(in_out), for each up-block:
+            # both blocks receive dim_out, since block1 changes dimension from dim_in + dim_out to dim_out
             for dim_in, dim_out in reversed(in_out):
-                film_dims.append(dim_out)  # первый блок после проекции в block1
-                film_dims.append(dim_out)  # второй блок после проекции в block2
+                film_dims.append(dim_out)  # first block after projection in block1
+                film_dims.append(dim_out)  # second block after projection in block2
 
             # final block
-            film_dims.append(init_dim)  # после проекции размерность становится init_dim
+            film_dims.append(init_dim)  # after projection dimension becomes init_dim
 
             for d in film_dims:
                 self.film_mlps.append(nn.Sequential(
                     nn.Linear(self.cond_dim, film_hidden_dim),
                     nn.Tanh(),
-                    nn.Linear(film_hidden_dim, 2 * d)  # γ и β
+                    nn.Linear(film_hidden_dim, 2 * d)  # γ and β
                 ))
 
 
@@ -735,6 +736,7 @@ class GaussianDiffusion1D(Module):
         for i in tqdm(reversed(range(0, t)), desc = 'interpolation sample time step', total = t):
             self_cond = x_start if self.self_condition else None
             img, x_start = self.p_sample(img, i, cond = cond, x_self_cond = self_cond)
+            img = self.unnormalize(img)
 
         return img
 
@@ -746,6 +748,53 @@ class GaussianDiffusion1D(Module):
             extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
             extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise
         )
+    
+    @torch.no_grad()
+    def visualize_denoising_process(self, shape, cond=None, save_every=50, specific_steps=None):
+        """
+        Visualize the denoising process by saving intermediate steps
+
+        Args:
+            shape: Shape of the tensor to generate (batch_size, channels, seq_length)
+            cond: Conditioning tensor
+            save_every: Save every N steps (to avoid too many samples)
+            specific_steps: List of specific steps to save (e.g., [0, 200, 400, 600, 800])
+
+        Returns:
+        List of (step, tensor) tuples showing the denoising progression with positive values
+        """
+        batch, device = shape[0], self.betas.device
+        img = torch.randn(shape, device=device)
+    
+        denoising_steps = []
+        x_start = None
+        
+        # If specific steps are provided, use them
+        if specific_steps is not None:
+            steps_to_save = set(specific_steps)
+        else:
+            steps_to_save = set()
+    
+        for t in tqdm(reversed(range(0, self.num_timesteps)), desc='denoising visualization', total=self.num_timesteps):
+            self_cond = x_start if self.self_condition else None
+            img, x_start = self.p_sample(img, t, cond=cond, x_self_cond=self_cond)
+        
+            # Save intermediate steps with denormalization to positive values
+            should_save = False
+            if specific_steps is not None:
+                should_save = t in steps_to_save
+            else:
+                should_save = t % save_every == 0 or t == 0
+                
+            if should_save:
+                # Denormalize to get positive values in [0, 1] range for saving
+                # Use clone() to avoid affecting the original img tensor
+                # First clamp to [-1, 1] range to ensure proper denormalization
+                img_clamped = torch.clamp(img.clone(), -0.999, 0.999)
+                denormalized_img = self.unnormalize(img_clamped)
+                denoising_steps.append([t, denormalized_img.cpu()])
+    
+        return denoising_steps
 
     def p_losses(self, x_start, t, cond = None, noise = None):
         b, c, n = x_start.shape
@@ -808,8 +857,8 @@ class Trainer1D(object):
         ema_update_every = 10,
         ema_decay = 0.995,
         adam_betas = (0.9, 0.99),
-        save_and_sample_every = 1000,
-        num_samples = 25,
+        save_and_sample_every = 500,
+        num_samples = 64,
         results_folder = '/workspace/diffusion_model/trained_models',
         amp = False,
         mixed_precision_type = 'fp16',
@@ -832,8 +881,8 @@ class Trainer1D(object):
 
         # sampling and training hyperparameters
 
-        assert has_int_squareroot(num_samples), 'number of samples must have an integer square root'
         self.num_samples = num_samples
+        assert has_int_squareroot(self.num_samples), 'number of samples must have an integer square root'
         self.save_and_sample_every = save_and_sample_every
 
         self.batch_size = train_batch_size

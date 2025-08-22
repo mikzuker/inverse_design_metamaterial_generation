@@ -131,11 +131,9 @@ def load_conditional_dataset_from_csv(csv_path: Path) -> Tuple[torch.Tensor, tor
             [0]
         )
         
-        # Создаем тензор features
         step_tensor = torch.tensor(features, dtype=torch.float32)
         step_tensor = step_tensor.view(1, 1, -1)  # (batch_size=1, channels=1, sequence_length)
         
-        # Извлекаем DSCS значения как условия (отдельно от features)
         dscs_values = [row[col] for col in dscs_cols]
         conditional_vectors = torch.tensor(dscs_values, dtype=torch.float32)
         conditional_vectors = conditional_vectors.view(1, -1)  # (batch_size=1, num_angles)
@@ -152,7 +150,7 @@ def load_conditional_dataset_from_csv(csv_path: Path) -> Tuple[torch.Tensor, tor
 def load_unconditional_dataset_from_csv(csv_path: Path) -> torch.Tensor:
     df = pd.read_csv(csv_path)
     
-    # Извлекаем колонки в правильном порядке
+            # Extract columns in correct order
     coord_cols = sorted([col for col in df.columns if col.startswith('coord_')], 
                        key=lambda x: int(x.split('_')[1]))
     radius_cols = sorted([col for col in df.columns if col.startswith('radius_')], 
@@ -163,21 +161,17 @@ def load_unconditional_dataset_from_csv(csv_path: Path) -> torch.Tensor:
     model_dataset = []
     
     for _, row in df.iterrows():
-        # Извлекаем координаты, радиусы и DSCS значения
         flat_coordinates = [row[col] for col in coord_cols]
         radiuses = [row[col] for col in radius_cols]
         dscs_values = [row[col] for col in dscs_cols]
         
-        # Создаем features с DSCS значениями
         features = flat_coordinates + radiuses + dscs_values
         
-        # Создаем тензор
         step_tensor = torch.tensor(features, dtype=torch.float32)
         step_tensor = step_tensor.view(1, 1, -1)  # (batch_size=1, channels=1, sequence_length)
         
         model_dataset.append(step_tensor)
     
-    # Объединяем тензоры
     dataset = torch.cat(model_dataset, dim=0)  # (batch_size, 1, sequence_length)
     
     return dataset
@@ -185,17 +179,17 @@ def load_unconditional_dataset_from_csv(csv_path: Path) -> torch.Tensor:
 
 if __name__ == "__main__":
     experiment_dir = Path('diffusion_model/training_dataset')
-    angles = [0, 10, 20, 40, 60, 80, 100, 120, 140, 160]
+    angles = [10, 20, 40, 60, 70, 80, 100, 120, 140, 160]
     
     save_dataset_to_csv(
         experiment_dir=experiment_dir,
         angles=angles,
-        output_csv_path=Path('diffusion_model/conditional_dataset.csv'),
+        output_csv_path=Path('diffusion_model/conditional_dataset_15000.csv'),
         dataset_type="conditional"
     )
     
     conditional_dataset, conditional_conditions = load_conditional_dataset_from_csv(
-        csv_path=Path('diffusion_model/conditional_dataset.csv')
+        csv_path=Path('diffusion_model/conditional_dataset_15000.csv')
     )
     
     print(conditional_dataset.shape)

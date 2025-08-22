@@ -39,7 +39,7 @@ def create_conditional_model_dataset(experiment_dir: Path, angles: List[float]):
             step_tensor = step_tensor.view(1, 1, -1)  # (batch_size=1, channels=1, sequence_length)
 
             conditional_vectors = torch.tensor([dscs_surface[i] for i in angle_indices])
-            conditional_vectors = conditional_vectors.view(1, -1)  # вместо (1, 1, -1)
+            conditional_vectors = conditional_vectors.view(1, -1)  # instead of (1, 1, -1)
 
             model_dataset.append(step_tensor)
             model_conditions.append(conditional_vectors)
@@ -51,6 +51,6 @@ def create_conditional_model_dataset(experiment_dir: Path, angles: List[float]):
 
 if __name__ == "__main__":
     dataset, conditions = create_conditional_model_dataset(Path('diffusion_model/training_dataset'), 
-        [0, 10, 20, 40, 60, 80, 100, 120, 140, 160])
+        [10, 20, 40, 60, 70, 80, 100, 120, 140, 160])
     print(dataset, dataset.shape)
     print(conditions, conditions.shape)
