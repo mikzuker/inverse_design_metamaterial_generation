@@ -14,7 +14,6 @@ This repository contains implementations of both **conditional** and **unconditi
 - **CMA-ES Optimization**: Covariance Matrix Adaptation Evolution Strategy for geometry optimization
 - **Electromagnetic Simulation**: Integration with SMUTHI for accurate scattering calculations
 - **Target Spectrum Matching**: Optimization towards desired electromagnetic response
-```
 
 ## 📁 Project Structure
 
