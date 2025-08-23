@@ -310,6 +310,8 @@ loss = calculate_loss(
 - **Spectrum Matching**: Optimizes towards specific target electromagnetic responses
 - **Multiple Angles**: Simultaneous optimization across multiple scattering angles
 - **Precomputation**: Efficient precomputation of target object spectra
+<<<<<<< diffusion_model_branch
+=======
 =======
 # Metasurface Optimization for Spectrum Mimicking
 
@@ -386,4 +388,3 @@ The optimization process generates:
 ## License
 
 MIT License.
->>>>>>> main
