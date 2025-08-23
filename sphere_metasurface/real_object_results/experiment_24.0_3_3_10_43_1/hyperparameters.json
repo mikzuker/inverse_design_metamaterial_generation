@@ -1,0 +1,33 @@
+{
+    "object_type": "FiniteCylinder",
+    "object_to_mimic": {
+        "radius": 5.0,
+        "position": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "height": 2.0,
+        "euler_angles": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "refractive_index": {
+            "real": 2.0,
+            "imag": 0.0
+        }
+    },
+    "vacuum_wavelength": 0.03947,
+    "angeles_to_mimic": [
+        25.0,
+        45.0,
+        65.0
+    ],
+    "side_length": 24.0,
+    "number_of_cells": 3,
+    "refractive_index": 10.0,
+    "real_object_path": "/workspace/sphere_metasurface/mat_data/DJI_el0deg_RCS.mat",
+    "iterations": 1,
+    "seed": 43
+}

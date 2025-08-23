@@ -1,0 +1,36 @@
+{
+    "object_type": "FiniteCylinder",
+    "object_to_mimic": {
+        "radius": 5.0,
+        "position": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "height": 2.0,
+        "euler_angles": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "refractive_index": {
+            "real": 2.0,
+            "imag": 0.0
+        }
+    },
+    "vacuum_wavelength": 0.04,
+    "angeles_to_mimic": [
+        0.4363323129985824,
+        0.7853981633974483,
+        1.1344640137963142,
+        2.007128639793479,
+        2.443460952792061,
+        2.6179938779914944,
+        3.0543261909900767
+    ],
+    "side_length": 24.0,
+    "number_of_cells": 2,
+    "refractive_index": 125.0,
+    "iterations": 1,
+    "seed": 43
+}
