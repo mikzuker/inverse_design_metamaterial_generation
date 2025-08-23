@@ -248,6 +248,7 @@ denoising_steps = model.__visualize_denoising_process__(
     conditional_vec=conditional_vec,
     specific_steps=[0, 100, 500, 1000]
 )
+```
 
 ## 🎯 CMA-ES Optimization Framework
 
