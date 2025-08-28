@@ -9,10 +9,10 @@ from fitness_function import calculate_spectrum
 
 def reproduce_results(experiment_path, reproduce_dir):
     """
-    Воспроизводит результаты оптимизации из сохраненных файлов
+    Reproduces optimization results from saved files
     
     Args:
-        experiment_path (str): Путь к директории с результатами эксперимента
+        experiment_path (str): Path to the directory with experiment results
     """
     experiment_dir = Path(experiment_path)
     
