@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-import seaborn as sns
 from pathlib import Path
 
 def load_and_analyze_dataset(csv_path):

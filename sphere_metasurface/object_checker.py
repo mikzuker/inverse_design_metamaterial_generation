@@ -2,8 +2,7 @@ import smuthi
 import smuthi.postprocessing.far_field as ff
 import smuthi.initial_field 
 import smuthi.simulation 
-import smuthi.layers as layers
-import smuthi.particles as particles
+import smuthi.layers
 
 import matplotlib.pyplot as plt
 import numpy as np

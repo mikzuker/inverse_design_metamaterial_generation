@@ -178,7 +178,7 @@ class Decoder_conditional_diffusion_vector():
         plt.ylabel('DSCS, relative units')
         plt.grid(True)
         plt.legend()
-        plt.title(f'DSCS Surface, Generated & Conditional')
+        plt.title('DSCS Surface, Generated & Conditional')
         plt.savefig(output_path / 'dscs_surface.pdf')
 
         self.sphere_surface.spheres_plot(save_path=output_path / 'sphere_surface.pdf')
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     for j in range(38, 39, 1):
         milestone = j
         model = Diffusion_model(milestone = milestone, use_film = True, results_folder = Path(__file__).parent.parent / 'Conditional_Model_16_2_4e-6_11000_20000', timesteps = 1000)
-        output_file = Path(__file__).parent.parent / f'try_out.txt'
+        output_file = Path(__file__).parent.parent / 'try_out.txt'
     
         with open(output_file, 'w') as f:
             for i in range(25):

@@ -13,7 +13,6 @@ def create_conditional_model_dataset(experiment_dir: Path, angles: List[float]):
             radiuses = json.load(open(dir / 'radiuses.json'))
             dscs_surface = json.load(open(dir / 'dscs_surface.json'))
             angles_list = json.load(open(dir / 'angles.json'))
-            hyper_parameters = json.load(open(dir / 'hyperparameters.json'))
             
             angle_indices = []
             for target_angle in angles:

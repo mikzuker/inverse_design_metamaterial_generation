@@ -181,3 +181,6 @@ fort.20
 
 # macOS system files
 .DS_Store
+
+# Data files
+*.dat
