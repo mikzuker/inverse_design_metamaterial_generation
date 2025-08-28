@@ -9,11 +9,11 @@ from sphere_metasurface.parametrization import Sphere_surface
 from dataset_creation import extrapolate_params, calculate_field
 import numpy as np
 import matplotlib.pyplot as plt
-from conditional_model import Diffusion_model
+from .conditional_model import Diffusion_model
 import scipy.interpolate
 
 
-class Decoder_conditional_diffusional_vector():
+class Decoder_conditional_diffusion_vector():
     def __init__(self, 
                  vector_to_decode: torch.Tensor,
                  angles: List[float],
@@ -197,7 +197,7 @@ if __name__ == "__main__":
                 vector_to_decode = model.__sample__(batch_size = 1, conditional_vec = torch.tensor([[0.2440047233652012,0.13373316545853187,0.02634935177036332,0.01681613001080275,0.014719126871156401,0.004718059458417722,0.021446479244308474,0.027422508550410247,0.05498299796079197,0.8492591641224932]]))
                 print(vector_to_decode)
 
-                decoder = Decoder_conditional_diffusional_vector(vector_to_decode, 
+                decoder = Decoder_conditional_diffusion_vector(vector_to_decode, 
                                                  angles = [10, 20, 40, 60, 70, 80, 100, 120, 140, 160],
                                                  number_of_cells = 2,
                                                  side_length = 10,

@@ -74,6 +74,8 @@ class Sphere_surface(object):
         plt.plot(self.side_length, 0, 'o', color='black')  # bottom right point
         
         plt.axis('equal')
+        plt.xlabel('X, relative units')
+        plt.ylabel('Y, relative units')
         plt.grid(True)
         plt.title('Spheres surface projection')
         plt.savefig(save_path)
