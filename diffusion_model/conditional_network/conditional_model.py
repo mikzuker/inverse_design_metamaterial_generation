@@ -3,10 +3,10 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
-from conditional_diffusion_pytorch_1d import Unet1D, GaussianDiffusion1D, Trainer1D, Dataset1D
-from conditional_dataset_preparation import create_conditional_model_dataset
+from .conditional_diffusion_pytorch_1d import Unet1D, GaussianDiffusion1D, Trainer1D, Dataset1D
+from .conditional_dataset_preparation import create_conditional_model_dataset
 from typing import List, Optional
-from dataset_csv_utils import load_conditional_dataset_from_csv
+from ..dataset_csv_utils import load_conditional_dataset_from_csv
 
 class Diffusion_model():
     def __init__(self, 
