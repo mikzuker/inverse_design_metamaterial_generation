@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 from pathlib import Path
 
+
 def read_loss_file(file_path):
     """Read loss values from a txt file"""
     with open(file_path, 'r') as f:
@@ -106,6 +107,7 @@ if __name__ == "__main__":
     
     # Print summary statistics
     print("\nSummary:")
+  
     print(f"Total iterations analyzed: {len(iterations)}")
     print(f"Mean loss range: {min(means):.2f} - {max(means):.2f}")
     print(f"Median loss range: {min(medians):.2f} - {max(medians):.2f}")

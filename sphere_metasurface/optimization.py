@@ -99,7 +99,6 @@ class Optimization(object):
 
     def extrapolate_params(self, params):
             real_params = []
-            # n_spheres = len(params) // 3  # Not used
             
             for i in range(len(self.surface.squares)):
                 square = self.surface.squares[i]
