@@ -172,3 +172,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Archive files
+Archive.zip
+
+# Fortran output files
+fort.20
+
+# macOS system files
+.DS_Store
