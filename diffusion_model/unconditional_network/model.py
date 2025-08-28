@@ -1,4 +1,3 @@
-import torch
 from pathlib import Path
 from denoising_diffusion_pytorch_1d import Unet1D, GaussianDiffusion1D, Trainer1D, Dataset1D
 from dataset_preparation import create_model_dataset

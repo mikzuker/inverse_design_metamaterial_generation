@@ -62,7 +62,6 @@ def calculate_field(spheres_surface,
 
 def extrapolate_params(params, surface):
     real_params = []
-    n_spheres = surface.number_of_cells**2
     
     for i in range(len(surface.squares)):
         square = surface.squares[i]
@@ -128,8 +127,6 @@ def generate_surface(seed: int,
     json.dump(radiuses_01.tolist(), open(experiment_dir / 'radiuses.json', 'w'))
     json.dump(dscs_surface.tolist(), open(experiment_dir / 'dscs_surface.json', 'w'))
     json.dump(angles.tolist(), open(experiment_dir / 'angles.json', 'w'))
-
-    fig = plt.figure(figsize=(10, 10))
             
     surface_array = [angles, dscs_surface]
     plt.plot(*surface_array, label='surface', linewidth=2)

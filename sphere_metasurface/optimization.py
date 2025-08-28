@@ -5,8 +5,6 @@ import random
 import cmaes
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-import os
-import sys
 import io
 import contextlib
 import ray  # Import Ray for parallel processing
@@ -101,7 +99,7 @@ class Optimization(object):
 
     def extrapolate_params(self, params):
             real_params = []
-            n_spheres = len(params) // 3
+            # n_spheres = len(params) // 3  # Not used
             
             for i in range(len(self.surface.squares)):
                 square = self.surface.squares[i]
