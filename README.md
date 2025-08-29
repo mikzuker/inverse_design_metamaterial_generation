@@ -19,7 +19,7 @@ This repository contains implementations of both **conditional** diffusion model
 
 ### [Tutorial: Conditional Diffusion Model](diffusion_model_inference_example.ipynb)
 
-Tutorial that presents a work process with conditional diffusion model can be found in the repository. 
+An example of inference using the trained diffusion model for metasurface inverse design, which reproduces the results mentioned in the paper, can be found in the [Jupyter notebook](diffusion_model_inference_example.ipynb).
 
 ### Conditional Diffusion Model
 
