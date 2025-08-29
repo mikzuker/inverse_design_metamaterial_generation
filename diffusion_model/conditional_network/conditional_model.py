@@ -54,7 +54,7 @@ class Diffusion_model():
         self.milestone = milestone
 
         # training_dataset, conditions = create_conditional_model_dataset(self.dataset_path, self.angles)
-        training_dataset, conditions = load_conditional_dataset_from_csv("diffusion_model/conditional_csv_datasets/conditional_dataset_6000.csv")
+        training_dataset, conditions = load_conditional_dataset_from_csv("diffusion_model/conditional_csv_datasets/conditional_dataset_11000.csv")
         self.dataset = Dataset1D(training_dataset, conditions)
 
         self.trainer = Trainer1D(
