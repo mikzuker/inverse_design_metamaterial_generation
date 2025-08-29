@@ -2,7 +2,7 @@
 
 This repository contains implementations of both **conditional** diffusion models for 1D data generation, built with PyTorch. The models are designed to solve inverse design scattering problems. The outputs of the models are vectors with relative values which can then be decoded to generate the geometry of metamaterials made of dielectric spheres. The project also includes comprehensive parametrization tools and CMA-ES optimization capabilities for geometry optimization based on target spectra to compare geometry results.
 
-![The scheeme of the research problem proposed in our study.](misc/problem_scheme.png)
+![The scheme of the research problem proposed in our study.](misc/problem_scheme.png)
 
 ## Installation
 - In VS Code install the "Remote Development" extension pack
