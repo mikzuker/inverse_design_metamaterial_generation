@@ -2,7 +2,7 @@
 
 This repository contains implementations of both **conditional** diffusion models for 1D data generation, built with PyTorch. The models are designed to solve inverse design scattering problems. The outputs of the models are vectors with relative values which can then be decoded to generate the geometry of metamaterials made of dielectric spheres. The project also includes comprehensive parametrization tools and CMA-ES optimization capabilities for geometry optimization based on target spectra to compare geometry results.
 
-![The scheeme of the research problem proposed in our study.](diffusion_model/problem_scheme.png)
+![The scheeme of the research problem proposed in our study.](misc/problem_scheme.png)
 
 ## Installation
 - In VS Code install the "Remote Development" extension pack
@@ -13,71 +13,11 @@ This repository contains implementations of both **conditional** diffusion model
   3) Set up the Python environment 
   4) Configure debugging 
 - Mount your local project directory into the container
-
-## Project Structure
-
-```
-diffusion_model/                   # Diffusion model implementations
-├── conditional_network/           # Conditional diffusion model implementation
-│   ├── conditional_model.py      # Main conditional model class
-│   ├── conditional_decoder.py    # Decoder for conditional generation
-│   ├── conditional_diffusion_pytorch_1d.py  # Core conditional diffusion implementation
-│   └── conditional_dataset_preparation.py   # Dataset preparation for conditional model
-├── unconditional_network/        # Unconditional diffusion model implementation
-│   ├── model.py                  # Main unconditional model class
-│   ├── decoder.py                # Decoder for unconditional generation
-│   ├── denoising_diffusion_pytorch_1d.py   # Core unconditional diffusion implementation
-│   └── dataset_preparation.py    # Dataset preparation for unconditional model
-├── conditional_csv_datasets/     # Pre-processed conditional datasets
-├── Conditional_Model_16_2_4e-6_11000_20000/  # Trained conditional model milestones
-├── dataset_csv_utils.py          # Utilities for loading datasets from CSV
-├── dataset_creation.py           # Dataset creation utilities
-├── mpe_analysis.py               # Mean Percentage Error analysis
-├── plot_loss.py                  # Training loss visualization
-├── dataset_pca_analysis.py       # PCA analysis for datasets
-└── mpe_loss_analysis.png         # Analysis visualization
-
-sphere_metasurface/               # Metasurface parametrization and optimization
-├── parametrization.py            # Core parametrization class for sphere-based metasurfaces
-├── optimization.py               # CMA-ES optimization framework
-├── fitness_function.py           # Fitness functions for spectrum matching
-├── mat_decoder.py                # Matrix decoder utilities
-├── object_checker.py             # Object validation and checking
-├── experiment_reproducing.py     # Experiment reproduction utilities
-```
-
-## Metasurface Parametrization
-
-The project includes a comprehensive framework for parametrizing and optimizing dielectric sphere-based metasurfaces. This allows you to convert the output vectors from diffusion models into actual physical geometries.
-
-### Sphere Surface Parametrization
-
-The `Sphere_surface` class provides a flexible way to create metasurfaces:
-
-```python
-from sphere_metasurface.parametrization import Sphere_surface
-
-# Create a metasurface with 4x4 grid of cells
-surface = Sphere_surface(
-    number_of_cells=4,
-    side_length=4.0,
-    reflective_index=complex(2.0, 0.0)  # refractive index
-)
-
-# Generate the mesh
-surface.mesh_generation()
-
-# Add spheres with specific radii and positions
-radii = [0.2, 0.3, 0.25, 0.35, ...]  # 16 values for 4x4 grid
-positions = [[0.5, 0.5, 0], [1.5, 0.5, 0], ...]  # 16 positions
-
-surface.__spheres_add__(radii, positions)
-
-# Visualize the metasurface
-surface.spheres_plot("metasurface.png")
-```
+- Install all required packages using [requirements.txt](requirements.txt)
 
 ## Diffusion model
+
+### [Tutorial: Conditional Diffusion Model](diffusion_model_inference_example.ipynb)
 
 Tutorial that presents a work process with conditional diffusion model can be found in the repository. 
 
@@ -119,14 +59,36 @@ sampled_seq_ddim = model.__sample_ddim__(
 
 ```
 
-## Performance
+## Metasurface Parametrization
 
-### Model Specifications
+The project includes a comprehensive framework for parametrizing and optimizing dielectric sphere-based metasurfaces. This allows you to convert the output vectors from diffusion models into actual physical geometries.
 
-| Model Type | Sequence Length | Feature Dimensions | Conditioning |
-|------------|----------------|-------------------|--------------|
-| Unconditional | 32 | 32 | None |
-| Conditional | 16 | 16 | FiLM (10D or 10 polar angles) |
+### Sphere Surface Parametrization
+
+The `Sphere_surface` class provides a flexible way to create metasurfaces:
+
+```python
+from sphere_metasurface.parametrization import Sphere_surface
+
+# Create a metasurface with 4x4 grid of cells
+surface = Sphere_surface(
+    number_of_cells=4,
+    side_length=4.0,
+    reflective_index=complex(2.0, 0.0)  # refractive index
+)
+
+# Generate the mesh
+surface.mesh_generation()
+
+# Add spheres with specific radii and positions
+radii = [0.2, 0.3, 0.25, 0.35, ...]  # 16 values for 4x4 grid
+positions = [[0.5, 0.5, 0], [1.5, 0.5, 0], ...]  # 16 positions
+
+surface.__spheres_add__(radii, positions)
+
+# Visualize the metasurface
+surface.spheres_plot("metasurface.png")
+```
 
 ## CMA-ES Optimization Framework
 
@@ -180,4 +142,36 @@ loss = calculate_loss(
     azimuthal_angle=0,  # x-axis
     polarization=0  # TE polarization
 )
+```
+
+## Project Structure
+
+```
+diffusion_model/                   # Diffusion model implementations
+├── conditional_network/           # Conditional diffusion model implementation
+│   ├── conditional_model.py      # Main conditional model class
+│   ├── conditional_decoder.py    # Decoder for conditional generation
+│   ├── conditional_diffusion_pytorch_1d.py  # Core conditional diffusion implementation
+│   └── conditional_dataset_preparation.py   # Dataset preparation for conditional model
+├── unconditional_network/        # Unconditional diffusion model implementation
+│   ├── model.py                  # Main unconditional model class
+│   ├── decoder.py                # Decoder for unconditional generation
+│   ├── denoising_diffusion_pytorch_1d.py   # Core unconditional diffusion implementation
+│   └── dataset_preparation.py    # Dataset preparation for unconditional model
+├── conditional_csv_datasets/     # Pre-processed conditional datasets
+├── Conditional_Model_16_2_4e-6_11000_20000/  # Trained conditional model milestones
+├── dataset_csv_utils.py          # Utilities for loading datasets from CSV
+├── dataset_creation.py           # Dataset creation utilities
+├── mpe_analysis.py               # Mean Percentage Error analysis
+├── plot_loss.py                  # Training loss visualization
+├── dataset_pca_analysis.py       # PCA analysis for datasets
+└── mpe_loss_analysis.png         # Analysis visualization
+
+sphere_metasurface/               # Metasurface parametrization and optimization
+├── parametrization.py            # Core parametrization class for sphere-based metasurfaces
+├── optimization.py               # CMA-ES optimization framework
+├── fitness_function.py           # Fitness functions for spectrum matching
+├── mat_decoder.py                # Matrix decoder utilities
+├── object_checker.py             # Object validation and checking
+├── experiment_reproducing.py     # Experiment reproduction utilities
 ```
