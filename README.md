@@ -14,7 +14,7 @@ This repository contains implementations of both **conditional** diffusion model
   4) Configure debugging 
 - Mount your local project directory into the container
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 diffusion_model/                   # Diffusion model implementations
@@ -119,7 +119,7 @@ sampled_seq_ddim = model.__sample_ddim__(
 
 ```
 
-## 📈 Performance
+## Performance
 
 ### Model Specifications
 
@@ -128,7 +128,7 @@ sampled_seq_ddim = model.__sample_ddim__(
 | Unconditional | 32 | 32 | None |
 | Conditional | 16 | 16 | FiLM (10D or 10 polar angles) |
 
-## 🎯 CMA-ES Optimization Framework
+## CMA-ES Optimization Framework
 
 The project also implements Covariance Matrix Adaptation Evolution Strategy (CMA-ES) for optimizing metasurface geometries to match required electromagnetic spectra. Generally, the CMA-ES optimization pipeline was used to compare optimization results with conditional diffusion model.
 
